@@ -20,8 +20,6 @@
  *   ...
  *   [2024/09/30] (月)
  *
- *  生成ページ https://cosense-month-page.taktamur.workers.dev/
- *
  * 使い方:
  * - getMonthlyPage() を呼び出すことで、現在の月のページを生成して文字列として返します。
  *
@@ -62,9 +60,6 @@ export function getMonthlyPage(now: Date): string {
 	for (let day = 1; day <= lastDayOfMonth; day++) {
 		output += generateDateString(now.getFullYear(), now.getMonth() + 1, day);
 	}
-
-	// 最後に改行2つとリンクを追加
-	output += `\n\n生成ページ https://cosense-month-page.taktamur.workers.dev/`;
 
 	return output;
 }

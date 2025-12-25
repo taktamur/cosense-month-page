@@ -1,55 +1,86 @@
 // src/components/Page.tsx
 import { getMonthlyPage } from "../getMonthlyPage";
-import { html } from "hono/html";
-
-// Cosense(Scrapbox)の月次ページを生成するコンポーネント
-// 仕様：
-// - コンポーネント名：MonthPage
-// - 初期表示：当月の月次ページを生成する
-// - 画面は以下の要素で構成される
-//   - ヘッダ部分
-//     - 前月・次月へのナビゲーションリンクを表示する
-//   - 月次ページのテキスト部分
-//     - 月次ページのテキスト部分はtextboxで表示する
-//     - 月次ページのテキスト部分にはダミーデータを表示する
-//     - コピペ用ボタンを用意する
+import { html, raw } from "hono/html";
 
 const formatDate = (date: Date): string => {
   return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}`;
 };
 
+const formatDisplayDate = (date: Date): string => {
+  return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+};
+
+const copyScript = raw(`
+  function copyToClipboard() {
+    const textarea = document.getElementById('monthpage');
+    const btn = document.getElementById('copyBtn');
+    const toast = document.getElementById('toast');
+
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      // ボタンを成功状態に
+      btn.classList.add('btn-success');
+      btn.innerHTML = '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>コピーしました';
+
+      // トーストを表示
+      toast.classList.add('show');
+
+      // 2秒後に元に戻す
+      setTimeout(() => {
+        btn.classList.remove('btn-success');
+        btn.innerHTML = '<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>コピー';
+        toast.classList.remove('show');
+      }, 2000);
+    });
+  }
+`);
+
 export const MonthPage = (date: Date) => {
   const monthText = getMonthlyPage(date);
 
-  // dateオブジェクトから1ヶ月引いたDateオブジェクトを生成
   const prevDateStr = formatDate(
     new Date(date.getFullYear(), date.getMonth() - 1)
   );
   const nextDateStr = formatDate(
     new Date(date.getFullYear(), date.getMonth() + 1)
   );
+
   return (
-    <div>
-      <header>
-        <a href={`/?date=${prevDateStr}`}>前月</a> ← →{" "}
-        <a href={`/?date=${nextDateStr}`}>翌月</a>
-      </header>
-      <br />
-      {html`
-        <button
-          onClick="navigator.clipboard.writeText(document.getElementById('monthpage').value); alert('Copied!')"
-        >
-          Copy to Clipboard
-        </button>
-      `}
-      <br />
-      <textarea
-        id="monthpage"
-        readOnly
-        style={{ width: "400px", height: "400px" }}
-      >
-        {monthText}
-      </textarea>
+    <div class="container">
+      <div class="card">
+        <header class="header">
+          <h1 class="title">{formatDisplayDate(date)}</h1>
+          <nav class="nav">
+            <a href={`/?date=${prevDateStr}`} class="nav-link">
+              ← 前月
+            </a>
+            <span class="nav-separator">|</span>
+            <a href={`/?date=${nextDateStr}`} class="nav-link">
+              翌月 →
+            </a>
+          </nav>
+        </header>
+
+        <div class="content">
+          <textarea id="monthpage" class="textarea" readOnly>
+            {monthText}
+          </textarea>
+        </div>
+
+        <div class="actions">
+          {html`
+            <button id="copyBtn" class="btn btn-primary" onclick="copyToClipboard()">
+              <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              コピー
+            </button>
+          `}
+        </div>
+      </div>
+
+      <div id="toast" class="toast">クリップボードにコピーしました</div>
+
+      <script>{copyScript}</script>
     </div>
   );
 };
